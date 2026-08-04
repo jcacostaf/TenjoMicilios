@@ -1,4 +1,4 @@
-namespace TenjoMovil.Api.Models;
+namespace TenjoMovil.Api.Entities;
 
 public class Driver
 {

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using TenjoMovil.Api.Models;
+using TenjoMovil.Api.Entities;
 
-namespace TenjoMovil.Api.Data;
+namespace TenjoMovil.Api.Infrastructure.Persistence;
 
 public class AppDbContext : DbContext
 {
