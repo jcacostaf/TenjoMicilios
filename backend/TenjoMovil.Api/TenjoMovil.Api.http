@@ -1,0 +1,6 @@
+@TenjoMovil.Api_HostAddress = http://localhost:5145
+
+GET {{TenjoMovil.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
