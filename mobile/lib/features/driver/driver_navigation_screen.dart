@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart' as ll;
 import '../../core/models/order.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/geocoding_service.dart';
+import '../../core/services/routing_service.dart';
 import '../../core/utils/geo.dart';
 
 class DriverNavigationScreen extends StatefulWidget {
@@ -21,6 +22,7 @@ class DriverNavigationScreen extends StatefulWidget {
 class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   final _api = ApiService();
   final _geocoding = GeocodingService();
+  final _routing = RoutingService();
   final _mapController = MapController();
 
   late ActiveOrder _order;
@@ -32,6 +34,12 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   bool _mapReady = false;
   Timer? _statusPollTimer;
   OrderStatus? _destinationResolvedForStatus;
+
+  List<ll.LatLng> _routePoints = [];
+  double? _routeDistanceMeters;
+  double? _routeDurationSeconds;
+  bool _fetchingRoute = false;
+  DateTime? _lastRouteFetch;
 
   @override
   void initState() {
@@ -52,6 +60,9 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   Future<void> _resolveDestination() async {
     if (_destinationResolvedForStatus == _order.status) return;
     _destinationResolvedForStatus = _order.status;
+    _routePoints = [];
+    _routeDistanceMeters = null;
+    _routeDurationSeconds = null;
 
     if (_order.status == OrderStatus.enCamino) {
       final address = _order.deliveryAddressText;
@@ -71,6 +82,29 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
       final lng = _order.storeLongitude;
       setState(() => _destination = (lat != null && lng != null) ? ll.LatLng(lat, lng) : null);
     }
+    unawaited(_maybeFetchRoute(force: true));
+  }
+
+  Future<void> _maybeFetchRoute({bool force = false}) async {
+    final origin = _currentPosition;
+    final dest = _destination;
+    if (origin == null || dest == null || _fetchingRoute) return;
+    if (!force &&
+        _lastRouteFetch != null &&
+        DateTime.now().difference(_lastRouteFetch!) < const Duration(seconds: 15)) {
+      return;
+    }
+
+    _fetchingRoute = true;
+    _lastRouteFetch = DateTime.now();
+    final result = await _routing.getRoute(origin, dest);
+    _fetchingRoute = false;
+    if (!mounted || result == null) return;
+    setState(() {
+      _routePoints = result.points;
+      _routeDistanceMeters = result.distanceMeters;
+      _routeDurationSeconds = result.durationSeconds;
+    });
   }
 
   void _startTracking() {
@@ -81,6 +115,7 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
       if (!mounted) return;
       setState(() => _currentPosition = point);
       unawaited(_api.updateDriverLocation(widget.driverId, position.latitude, position.longitude));
+      unawaited(_maybeFetchRoute());
       if (_mapReady) {
         _mapController.move(point, _mapController.camera.zoom);
       }
@@ -150,6 +185,7 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
             options: MapOptions(
               initialCenter: center,
               initialZoom: 16,
+              minZoom: workingAreaMinZoom,
               onMapReady: () => _mapReady = true,
             ),
             children: [
@@ -157,10 +193,21 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
                 urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
                 subdomains: const ['a', 'b', 'c'],
               ),
-              if (_currentPosition != null && _destination != null)
+              if (_routePoints.isNotEmpty)
                 PolylineLayer(
                   polylines: [
-                    Polyline(points: [_currentPosition!, _destination!], color: Colors.deepOrange, strokeWidth: 4),
+                    Polyline(points: _routePoints, color: Colors.deepOrange, strokeWidth: 4),
+                  ],
+                )
+              else if (_currentPosition != null && _destination != null)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: [_currentPosition!, _destination!],
+                      color: Colors.deepOrange,
+                      strokeWidth: 3,
+                      pattern: const StrokePattern.dotted(),
+                    ),
                   ],
                 ),
               MarkerLayer(
@@ -216,6 +263,11 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
             const Text('Buscando la ubicacion en el mapa...', style: TextStyle(color: Colors.grey))
           else if (_destination == null)
             const Text('No se pudo ubicar el destino en el mapa.', style: TextStyle(color: Colors.grey))
+          else if (_routeDistanceMeters != null && _routeDurationSeconds != null)
+            Text(
+              _formatRoute(_routeDistanceMeters!, _routeDurationSeconds!),
+              style: const TextStyle(color: Colors.grey),
+            )
           else if (distance != null)
             Text(_formatDistance(distance), style: const TextStyle(color: Colors.grey)),
           const SizedBox(height: 12),
@@ -255,5 +307,11 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   String _formatDistance(double meters) {
     if (meters < 1000) return '${meters.round()} m de distancia';
     return '${(meters / 1000).toStringAsFixed(1)} km de distancia';
+  }
+
+  String _formatRoute(double meters, double seconds) {
+    final distText = meters < 1000 ? '${meters.round()} m' : '${(meters / 1000).toStringAsFixed(1)} km';
+    final minutes = (seconds / 60).ceil();
+    return '$distText · $minutes min';
   }
 }
