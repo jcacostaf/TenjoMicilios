@@ -37,10 +37,22 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
   ActiveOrder? _activeOrder;
   List<AvailableOrder> _availableOrders = [];
 
+  final Set<int> _seenOrderIds = {};
+  Timer? _pollTimer;
+
+  int get _unseenCount =>
+      _availableOrders.where((o) => !_seenOrderIds.contains(o.orderId)).length;
+
   @override
   void initState() {
     super.initState();
     _loadIdentity();
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadIdentity() async {
@@ -53,6 +65,19 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
     });
     if (id != null) {
       unawaited(_refresh());
+      _pollTimer = Timer.periodic(const Duration(seconds: 15), (_) => _pollAvailableOrders());
+    }
+  }
+
+  Future<void> _pollAvailableOrders() async {
+    final driverId = _driverId;
+    if (driverId == null) return;
+    try {
+      final available = await _api.getAvailableOrders(driverId);
+      if (!mounted) return;
+      setState(() => _availableOrders = available);
+    } catch (_) {
+      // fallo silencioso: el proximo ciclo de sondeo lo reintenta
     }
   }
 
@@ -98,6 +123,9 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
       setState(() {
         _activeOrder = active;
         _availableOrders = available;
+        _seenOrderIds
+          ..clear()
+          ..addAll(available.map((o) => o.orderId));
       });
     } catch (e) {
       setState(() => _ordersError = 'Error cargando pedidos: $e');
@@ -199,9 +227,13 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
       appBar: AppBar(
         title: Text('Hola, $_driverName'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: (_loadingLocation || _loadingOrders) ? null : _refresh,
+          Badge(
+            label: Text('$_unseenCount'),
+            isLabelVisible: _unseenCount > 0,
+            child: IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: (_loadingLocation || _loadingOrders) ? null : _refresh,
+            ),
           ),
         ],
       ),
@@ -332,9 +364,21 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
   Widget _buildActiveOrderAction(OrderStatus status) {
     switch (status) {
       case OrderStatus.preparando:
-        return const Text(
-          'Esperando que el restaurante lo prepare. Puedes ir llegando.',
-          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+        return const Row(
+          children: [
+            SizedBox(
+              width: 14,
+              height: 14,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Esperando que el restaurante lo prepare. Puedes ir llegando.',
+                style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+              ),
+            ),
+          ],
         );
       case OrderStatus.listo:
         return ElevatedButton(

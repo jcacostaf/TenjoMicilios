@@ -183,7 +183,20 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color),
       ),
-      child: Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (status == OrderStatus.preparando) ...[
+            SizedBox(
+              width: 10,
+              height: 10,
+              child: CircularProgressIndicator(strokeWidth: 1.5, color: color),
+            ),
+            const SizedBox(width: 6),
+          ],
+          Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 12)),
+        ],
+      ),
     );
   }
 }
