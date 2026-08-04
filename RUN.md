@@ -1,52 +1,53 @@
-# Running TenjoMicilios Locally
+# Cómo correr TenjoMicilios en local
 
-## Prerequisites
+## Requisitos previos
 - .NET SDK 10+ (`dotnet --version`)
 - Node.js LTS (`node --version`, `npm --version`)
-- `dotnet-ef` tool: `dotnet tool install --global dotnet-ef`
+- Herramienta `dotnet-ef`: `dotnet tool install --global dotnet-ef`
+- PostgreSQL instalado y corriendo localmente
 
 ## Backend (API)
 
-Uses PostgreSQL. Copy the example config and set your local password:
+Usa PostgreSQL. Copia el archivo de configuración de ejemplo y pon tu contraseña local:
 
 ```
 cd backend/TenjoMovil.Api
 cp appsettings.Development.json.example appsettings.Development.json
-# edit appsettings.Development.json and set your real PostgreSQL password
+# edita appsettings.Development.json y pon tu contraseña real de PostgreSQL
 ```
 
-Then create the database (if it doesn't exist yet) and run:
+Luego crea la base de datos (si no existe todavía) y corre el backend:
 
 ```
-dotnet ef database update   # only needed the first time, or after new migrations
+dotnet ef database update   # solo la primera vez, o despues de nuevas migraciones
 dotnet run --urls http://localhost:5145
 ```
 
-The API will be available at `http://localhost:5145`. Endpoints:
+La API quedará disponible en `http://localhost:5145`. Endpoints:
 - `GET /api/stores`
 - `POST /api/stores`
 - `PUT /api/stores/{id}`
 - `GET /api/drivers`
 - `POST /api/drivers/{id}/location`
 
-Data is stored in a local SQLite file (`tenjomovil.db`) created inside `backend/TenjoMovil.Api`.
+Los datos se guardan en una base de datos PostgreSQL local llamada `tenjomovil`.
 
 ## Frontend (Admin)
 
 ```
 cd frontend/admin
-npm install   # only needed the first time, or after dependency changes
+npm install   # solo la primera vez, o despues de cambios en dependencias
 npm run dev
 ```
 
-The admin app will be available at `http://localhost:5173`. It expects the backend to be running at `http://localhost:5145`.
+La app de administración quedará disponible en `http://localhost:5173`. Necesita que el backend esté corriendo en `http://localhost:5145`.
 
-## Notes
-- Both must run at the same time (in separate terminals) for the admin app to work.
-- If you change `Program.cs` or add a migration, restart the backend (`dotnet run` does not hot-reload top-level code changes).
-- If you add/remove a model, create a new migration before running the app:
+## Notas
+- Los dos deben estar corriendo al mismo tiempo (en terminales separadas) para que la app admin funcione.
+- Si cambias `Program.cs` o agregas una migración, reinicia el backend (`dotnet run` no recarga automáticamente cambios de código de nivel superior).
+- Si agregas o quitas un modelo, crea una nueva migración antes de correr la app:
   ```
   cd backend/TenjoMovil.Api
-  dotnet ef migrations add <MigrationName>
+  dotnet ef migrations add <NombreMigracion>
   dotnet ef database update
   ```
