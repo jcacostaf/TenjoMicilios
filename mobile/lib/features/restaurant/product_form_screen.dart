@@ -27,9 +27,9 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   final _api = ApiService();
   final _imagePicker = ImagePicker();
 
-  static const double _minPrice = 0;
-  static const double _maxPrice = 100000;
   static const double _priceStep = 500;
+  static const double _minPrice = _priceStep;
+  static const double _maxPrice = 100000;
 
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
