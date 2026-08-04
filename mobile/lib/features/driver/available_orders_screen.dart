@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/models/order.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/driver_identity_service.dart';
+import 'driver_navigation_screen.dart';
 
 final _currencyFormat = NumberFormat.currency(
   locale: 'es_CO',
@@ -177,6 +178,15 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
     }
   }
 
+  Future<void> _openNavigation(ActiveOrder order) async {
+    final driverId = _driverId;
+    if (driverId == null) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => DriverNavigationScreen(initialOrder: order, driverId: driverId)),
+    );
+    await _refresh();
+  }
+
   Future<void> _complete() async {
     final driverId = _driverId;
     final order = _activeOrder;
@@ -287,6 +297,12 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
                         total: _activeOrder!.total,
                       ),
                       const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: () => _openNavigation(_activeOrder!),
+                        icon: const Icon(Icons.map),
+                        label: const Text('Ver mapa'),
+                      ),
+                      const SizedBox(height: 8),
                       _buildActiveOrderAction(_activeOrder!.status),
                     ],
                   ),

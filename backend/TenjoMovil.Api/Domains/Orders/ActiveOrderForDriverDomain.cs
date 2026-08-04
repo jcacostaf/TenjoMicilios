@@ -9,6 +9,8 @@ public record ActiveOrderDto(
     int StoreId,
     string StoreName,
     string? StoreAddress,
+    double? StoreLatitude,
+    double? StoreLongitude,
     string? DeliveryAddressText,
     string? RecipientName,
     string? Note,
@@ -31,6 +33,7 @@ public class ActiveOrderForDriverDomain(IOrderRepository orderRepo, IStoreReposi
         var store = await storeRepo.GetByIdAsync(order.StoreId, ct);
         return new ActiveOrderDto(
             order.Id, order.StoreId, store?.Name ?? "Tienda", store?.Address,
+            store?.Latitude, store?.Longitude,
             order.DeliveryAddressText, order.RecipientName, order.Note, order.Total,
             order.Items.Select(i => new OrderItemDto(i.ProductName, i.UnitPrice, i.Quantity)).ToList(),
             order.Status, order.CreatedAt, order.AcceptedAt);
