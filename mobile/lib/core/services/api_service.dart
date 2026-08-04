@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import '../api_config.dart';
 import '../models/store.dart';
@@ -19,12 +20,13 @@ class ApiService {
     return data.map((json) => Product.fromJson(json)).toList();
   }
 
-  Future<void> createProduct(int storeId, Product product) async {
-    await http.post(
+  Future<Product> createProduct(int storeId, Product product) async {
+    final res = await http.post(
       Uri.parse('$apiBaseUrl/api/stores/$storeId/products'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(product.toJson()),
     );
+    return Product.fromJson(jsonDecode(res.body));
   }
 
   Future<void> updateProduct(Product product) async {
@@ -33,5 +35,12 @@ class ApiService {
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(product.toJson()),
     );
+  }
+
+  Future<void> uploadProductPhoto(int productId, Uint8List bytes, String fileName) async {
+    final uri = Uri.parse('$apiBaseUrl/api/products/$productId/photo');
+    final request = http.MultipartRequest('POST', uri)
+      ..files.add(http.MultipartFile.fromBytes('file', bytes, filename: fileName));
+    await request.send();
   }
 }

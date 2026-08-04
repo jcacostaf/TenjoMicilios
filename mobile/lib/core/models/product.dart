@@ -5,6 +5,7 @@ class Product {
   final String? description;
   final double price;
   final bool isActive;
+  final String? imageUrl;
   final DateTime createdAt;
 
   Product({
@@ -14,6 +15,7 @@ class Product {
     required this.description,
     required this.price,
     required this.isActive,
+    required this.imageUrl,
     required this.createdAt,
   });
 
@@ -25,6 +27,7 @@ class Product {
       description: json['description'] as String?,
       price: (json['price'] as num).toDouble(),
       isActive: json['isActive'] as bool,
+      imageUrl: json['imageUrl'] as String?,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }

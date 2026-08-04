@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../../core/api_config.dart';
 import '../../core/models/store.dart';
 import '../../core/models/product.dart';
 import '../../core/services/api_service.dart';
 import 'product_form_screen.dart';
+
+final _currencyFormat = NumberFormat.currency(
+  locale: 'es_CO',
+  symbol: '\$',
+  decimalDigits: 0,
+);
 
 class CatalogScreen extends StatefulWidget {
   final Store store;
@@ -37,6 +45,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
       description: product.description,
       price: product.price,
       isActive: !product.isActive,
+      imageUrl: product.imageUrl,
       createdAt: product.createdAt,
     );
     await _api.updateProduct(updated);
@@ -65,9 +74,20 @@ class _CatalogScreenState extends State<CatalogScreen> {
             itemBuilder: (context, index) {
               final product = products[index];
               return ListTile(
+                leading: product.imageUrl != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(6),
+                        child: Image.network(
+                          '$apiBaseUrl${product.imageUrl}',
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : const Icon(Icons.fastfood),
                 title: Text(product.name),
                 subtitle: Text(
-                  '\$${product.price.toStringAsFixed(0)}'
+                  '${_currencyFormat.format(product.price)}'
                   '${product.description != null ? ' - ${product.description}' : ''}\n'
                   'Creado: ${_formatDate(product.createdAt)}',
                 ),
