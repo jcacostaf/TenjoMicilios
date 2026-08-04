@@ -7,9 +7,10 @@ namespace TenjoMovil.Api.Infrastructure.Queries;
 
 public class OrderQueries(AppDbContext db) : IOrderQueries
 {
-    public Task<List<Order>> ListPendingAsync(CancellationToken ct) =>
+    public Task<List<Order>> ListAvailableForDriversAsync(CancellationToken ct) =>
         db.Orders.Include(o => o.Items)
-            .Where(o => o.Status == OrderStatus.Pendiente)
+            .Where(o => o.DriverId == null &&
+                        (o.Status == OrderStatus.Preparando || o.Status == OrderStatus.Listo))
             .ToListAsync(ct);
 
     public Task<List<Order>> ListByStoreAsync(int storeId, CancellationToken ct) =>

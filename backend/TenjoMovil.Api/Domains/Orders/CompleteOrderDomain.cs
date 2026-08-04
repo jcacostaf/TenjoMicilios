@@ -9,7 +9,7 @@ public enum CompleteOrderStatus
     Success,
     NotFound,
     NotOwnedByDriver,
-    NotAccepted
+    NotPickedUp
 }
 
 public record CompleteOrderResult(CompleteOrderStatus Status, Order? Order);
@@ -32,10 +32,10 @@ public class CompleteOrderDomain(IOrderRepository orderRepo, IUnitOfWork uow)
                 await uow.RollbackAsync(ct);
                 return new CompleteOrderResult(CompleteOrderStatus.NotOwnedByDriver, null);
             }
-            if (order.Status != OrderStatus.Aceptado)
+            if (order.Status != OrderStatus.EnCamino)
             {
                 await uow.RollbackAsync(ct);
-                return new CompleteOrderResult(CompleteOrderStatus.NotAccepted, null);
+                return new CompleteOrderResult(CompleteOrderStatus.NotPickedUp, null);
             }
 
             order.Status = OrderStatus.Entregado;

@@ -30,9 +30,12 @@ builder.Services.AddScoped<UploadProductPhotoDomain>();
 
 builder.Services.AddScoped<CreateOrderDomain>();
 builder.Services.AddScoped<StoreOrdersListDomain>();
+builder.Services.AddScoped<ConfirmOrderDomain>();
+builder.Services.AddScoped<MarkOrderReadyDomain>();
 builder.Services.AddScoped<AvailableOrdersForDriverDomain>();
 builder.Services.AddScoped<ActiveOrderForDriverDomain>();
 builder.Services.AddScoped<AcceptOrderDomain>();
+builder.Services.AddScoped<PickUpOrderDomain>();
 builder.Services.AddScoped<CompleteOrderDomain>();
 
 var app = builder.Build();

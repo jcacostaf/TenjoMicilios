@@ -1,4 +1,4 @@
-enum OrderStatus { pendiente, aceptado, entregado }
+enum OrderStatus { pendiente, preparando, listo, enCamino, entregado }
 
 class OrderItemInput {
   final int productId;
@@ -89,6 +89,7 @@ class AvailableOrder {
   final String? note;
   final double total;
   final List<OrderItemLine> items;
+  final OrderStatus status;
   final DateTime createdAt;
   final double? distanceMeters;
 
@@ -102,6 +103,7 @@ class AvailableOrder {
     required this.note,
     required this.total,
     required this.items,
+    required this.status,
     required this.createdAt,
     required this.distanceMeters,
   });
@@ -119,6 +121,7 @@ class AvailableOrder {
       items: (json['items'] as List<dynamic>)
           .map((j) => OrderItemLine.fromJson(j as Map<String, dynamic>))
           .toList(),
+      status: OrderStatus.values[json['status'] as int],
       createdAt: DateTime.parse(json['createdAt'] as String),
       distanceMeters: (json['distanceMeters'] as num?)?.toDouble(),
     );

@@ -59,6 +59,9 @@ namespace TenjoMovil.Api.Migrations
                     b.Property<DateTime?>("AcceptedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -76,6 +79,12 @@ namespace TenjoMovil.Api.Migrations
 
                     b.Property<bool>("PickedUp")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("PickedUpAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ReadyAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("RecipientName")
                         .HasColumnType("text");

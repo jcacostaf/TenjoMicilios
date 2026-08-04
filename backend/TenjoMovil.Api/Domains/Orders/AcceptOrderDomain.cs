@@ -23,7 +23,7 @@ public class AcceptOrderDomain(IOrderRepository orderRepo, IUnitOfWork uow)
         {
             return new AcceptOrderResult(AcceptOrderStatus.NotFound, null);
         }
-        if (order.Status != OrderStatus.Pendiente)
+        if (order.DriverId is not null || order.Status is not (OrderStatus.Preparando or OrderStatus.Listo))
         {
             return new AcceptOrderResult(AcceptOrderStatus.AlreadyTaken, null);
         }
@@ -39,9 +39,9 @@ public class AcceptOrderDomain(IOrderRepository orderRepo, IUnitOfWork uow)
         await uow.BeginAsync(ct);
         try
         {
-            // Update atomico condicionado a Status == Pendiente: si dos conductores
-            // aceptan al mismo tiempo, solo uno gana la carrera (ver escenario 12
-            // en docs/especificacion-logistica-repartidores.md).
+            // Update atomico condicionado a que siga sin conductor: si dos
+            // conductores aceptan al mismo tiempo, solo uno gana la carrera
+            // (ver escenario 12 en docs/especificacion-logistica-repartidores.md).
             var claimed = await orderRepo.TryClaimAsync(orderId, driverId, acceptedAt, ct);
             await uow.CommitAsync(ct);
 
@@ -51,7 +51,6 @@ public class AcceptOrderDomain(IOrderRepository orderRepo, IUnitOfWork uow)
             }
 
             order.DriverId = driverId;
-            order.Status = OrderStatus.Aceptado;
             order.AcceptedAt = acceptedAt;
             return new AcceptOrderResult(AcceptOrderStatus.Success, order);
         }

@@ -135,6 +135,20 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
     }
   }
 
+  Future<void> _pickUp() async {
+    final driverId = _driverId;
+    final order = _activeOrder;
+    if (driverId == null || order == null) return;
+    try {
+      await _api.pickUpOrder(order.orderId, driverId);
+      await _refresh();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   Future<void> _complete() async {
     final driverId = _driverId;
     final order = _activeOrder;
@@ -241,10 +255,7 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
                         total: _activeOrder!.total,
                       ),
                       const SizedBox(height: 12),
-                      ElevatedButton(
-                        onPressed: _complete,
-                        child: const Text('Entregado'),
-                      ),
+                      _buildActiveOrderAction(_activeOrder!.status),
                     ],
                   ),
                 ),
@@ -284,6 +295,15 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
                             ),
                           ],
                         ),
+                        Text(
+                          order.status == OrderStatus.listo
+                              ? 'Listo para recoger'
+                              : 'Preparando en la tienda',
+                          style: TextStyle(
+                            color: order.status == OrderStatus.listo ? Colors.purple : Colors.blue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         _buildOrderDetails(
                           deliverTo: order.deliveryAddressText,
@@ -307,6 +327,29 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildActiveOrderAction(OrderStatus status) {
+    switch (status) {
+      case OrderStatus.preparando:
+        return const Text(
+          'Esperando que el restaurante lo prepare. Puedes ir llegando.',
+          style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic),
+        );
+      case OrderStatus.listo:
+        return ElevatedButton(
+          onPressed: _pickUp,
+          child: const Text('Recogido, en camino'),
+        );
+      case OrderStatus.enCamino:
+        return ElevatedButton(
+          onPressed: _complete,
+          child: const Text('Entregado'),
+        );
+      case OrderStatus.pendiente:
+      case OrderStatus.entregado:
+        return const SizedBox.shrink();
+    }
   }
 
   String _formatDistance(double meters) {

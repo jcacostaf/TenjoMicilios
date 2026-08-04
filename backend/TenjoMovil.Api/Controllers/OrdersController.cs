@@ -38,6 +38,34 @@ public class OrdersController : ControllerBase
         };
     }
 
+    [HttpPost("orders/{id:int}/confirm")]
+    public async Task<IActionResult> Confirm(
+        int id, [FromServices] ConfirmOrderDomain domain, CancellationToken ct)
+    {
+        var result = await domain.ConfirmAsync(id, ct);
+        return result.Status switch
+        {
+            ConfirmOrderStatus.NotFound => NotFound(),
+            ConfirmOrderStatus.InvalidStatus => Problem(detail: "Este pedido ya fue confirmado.", statusCode: StatusCodes.Status409Conflict),
+            ConfirmOrderStatus.Success => Ok(result.Order),
+            _ => Problem()
+        };
+    }
+
+    [HttpPost("orders/{id:int}/ready")]
+    public async Task<IActionResult> Ready(
+        int id, [FromServices] MarkOrderReadyDomain domain, CancellationToken ct)
+    {
+        var result = await domain.MarkReadyAsync(id, ct);
+        return result.Status switch
+        {
+            MarkOrderReadyStatus.NotFound => NotFound(),
+            MarkOrderReadyStatus.InvalidStatus => Problem(detail: "Este pedido no esta en preparacion.", statusCode: StatusCodes.Status409Conflict),
+            MarkOrderReadyStatus.Success => Ok(result.Order),
+            _ => Problem()
+        };
+    }
+
     [HttpPost("orders/{id:int}/accept")]
     public async Task<IActionResult> Accept(
         int id, [FromBody] OrderDriverRequest request, [FromServices] AcceptOrderDomain domain, CancellationToken ct)
@@ -53,6 +81,21 @@ public class OrdersController : ControllerBase
         };
     }
 
+    [HttpPost("orders/{id:int}/pickup")]
+    public async Task<IActionResult> PickUp(
+        int id, [FromBody] OrderDriverRequest request, [FromServices] PickUpOrderDomain domain, CancellationToken ct)
+    {
+        var result = await domain.PickUpAsync(id, request.DriverId, ct);
+        return result.Status switch
+        {
+            PickUpOrderStatus.NotFound => NotFound(),
+            PickUpOrderStatus.NotOwnedByDriver => Problem(detail: "Este pedido no esta asignado a este conductor.", statusCode: StatusCodes.Status409Conflict),
+            PickUpOrderStatus.NotReady => Problem(detail: "Este pedido todavia no esta listo para recoger.", statusCode: StatusCodes.Status409Conflict),
+            PickUpOrderStatus.Success => Ok(result.Order),
+            _ => Problem()
+        };
+    }
+
     [HttpPost("orders/{id:int}/complete")]
     public async Task<IActionResult> Complete(
         int id, [FromBody] OrderDriverRequest request, [FromServices] CompleteOrderDomain domain, CancellationToken ct)
@@ -62,7 +105,7 @@ public class OrdersController : ControllerBase
         {
             CompleteOrderStatus.NotFound => NotFound(),
             CompleteOrderStatus.NotOwnedByDriver => Problem(detail: "Este pedido no esta asignado a este conductor.", statusCode: StatusCodes.Status409Conflict),
-            CompleteOrderStatus.NotAccepted => Problem(detail: "Este pedido no esta en curso.", statusCode: StatusCodes.Status409Conflict),
+            CompleteOrderStatus.NotPickedUp => Problem(detail: "Primero debes marcar que recogiste el pedido.", statusCode: StatusCodes.Status409Conflict),
             CompleteOrderStatus.Success => Ok(result.Order),
             _ => Problem()
         };

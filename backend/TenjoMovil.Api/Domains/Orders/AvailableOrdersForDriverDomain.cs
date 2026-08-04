@@ -1,6 +1,7 @@
 using TenjoMovil.Api.Abstractions.Drivers;
 using TenjoMovil.Api.Abstractions.Orders;
 using TenjoMovil.Api.Abstractions.Stores;
+using TenjoMovil.Api.Entities;
 
 namespace TenjoMovil.Api.Domains.Orders;
 
@@ -22,6 +23,7 @@ public record AvailableOrderDto(
     string? Note,
     decimal Total,
     List<OrderItemDto> Items,
+    OrderStatus Status,
     DateTime CreatedAt,
     double? DistanceMeters);
 
@@ -38,10 +40,10 @@ public class AvailableOrdersForDriverDomain(
             return new AvailableOrdersResult(AvailableOrdersStatus.DriverNotFound, null);
         }
 
-        var pendingOrders = await orderQueries.ListPendingAsync(ct);
+        var availableOrders = await orderQueries.ListAvailableForDriversAsync(ct);
         var storesById = (await storeQueries.ListAsync(ct)).ToDictionary(s => s.Id);
 
-        var orders = pendingOrders
+        var orders = availableOrders
             .Select(order =>
             {
                 storesById.TryGetValue(order.StoreId, out var store);
@@ -53,7 +55,7 @@ public class AvailableOrdersForDriverDomain(
                     order.Id, order.StoreId, store?.Name ?? "Tienda", store?.Address,
                     order.DeliveryAddressText, order.RecipientName, order.Note, order.Total,
                     order.Items.Select(i => new OrderItemDto(i.ProductName, i.UnitPrice, i.Quantity)).ToList(),
-                    order.CreatedAt, distance);
+                    order.Status, order.CreatedAt, distance);
             })
             .OrderBy(dto => dto.DistanceMeters ?? double.MaxValue)
             .ToList();

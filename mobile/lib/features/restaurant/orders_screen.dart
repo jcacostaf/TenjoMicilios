@@ -36,6 +36,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
     });
   }
 
+  Future<void> _confirm(StoreOrder order) async {
+    try {
+      await _api.confirmOrder(order.id);
+      _loadOrders();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
+  Future<void> _markReady(StoreOrder order) async {
+    try {
+      await _api.markOrderReady(order.id);
+      _loadOrders();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$e')));
+      }
+    }
+  }
+
   Future<void> _openCreateOrderSheet() async {
     final products = await _api.getProducts(widget.store.id);
     final activeProducts = products.where((p) => p.isActive).toList();
@@ -110,6 +132,20 @@ class _OrdersScreenState extends State<OrdersScreen> {
                         'Total: ${_currencyFormat.format(order.total)}',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
+                      if (order.status == OrderStatus.pendiente) ...[
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () => _confirm(order),
+                          child: const Text('Confirmar pedido'),
+                        ),
+                      ],
+                      if (order.status == OrderStatus.preparando) ...[
+                        const SizedBox(height: 8),
+                        ElevatedButton(
+                          onPressed: () => _markReady(order),
+                          child: const Text('Marcar listo'),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -135,7 +171,9 @@ class _StatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
       OrderStatus.pendiente => ('Pendiente', Colors.orange),
-      OrderStatus.aceptado => ('Aceptado', Colors.blue),
+      OrderStatus.preparando => ('Preparando', Colors.blue),
+      OrderStatus.listo => ('Listo', Colors.purple),
+      OrderStatus.enCamino => ('En camino', Colors.teal),
       OrderStatus.entregado => ('Entregado', Colors.green),
     };
     return Container(

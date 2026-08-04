@@ -74,6 +74,20 @@ class ApiService {
     return data.map((json) => StoreOrder.fromJson(json)).toList();
   }
 
+  Future<void> confirmOrder(int orderId) async {
+    final res = await http.post(Uri.parse('$apiBaseUrl/api/orders/$orderId/confirm'));
+    if (res.statusCode >= 400) {
+      throw Exception(_errorDetail(res.body) ?? 'No se pudo confirmar el pedido');
+    }
+  }
+
+  Future<void> markOrderReady(int orderId) async {
+    final res = await http.post(Uri.parse('$apiBaseUrl/api/orders/$orderId/ready'));
+    if (res.statusCode >= 400) {
+      throw Exception(_errorDetail(res.body) ?? 'No se pudo marcar como listo');
+    }
+  }
+
   Future<DriverProfile> createDriver(String name) async {
     final res = await http.post(
       Uri.parse('$apiBaseUrl/api/drivers'),
@@ -111,6 +125,17 @@ class ApiService {
     );
     if (res.statusCode >= 400) {
       throw Exception(_errorDetail(res.body) ?? 'No se pudo aceptar el pedido');
+    }
+  }
+
+  Future<void> pickUpOrder(int orderId, int driverId) async {
+    final res = await http.post(
+      Uri.parse('$apiBaseUrl/api/orders/$orderId/pickup'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'driverId': driverId}),
+    );
+    if (res.statusCode >= 400) {
+      throw Exception(_errorDetail(res.body) ?? 'No se pudo marcar como recogido');
     }
   }
 

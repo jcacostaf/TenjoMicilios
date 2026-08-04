@@ -12,3 +12,4 @@ Para levantar cada proyecto en local, ver [RUN.md](RUN.md).
 
 - **[docs/especificacion-logistica-repartidores.md](docs/especificacion-logistica-repartidores.md)** — Especificacion formal del sistema de pedidos y repartidores (maquinas de estado, eventos, sincronizacion offline, reasignacion, fases de implementacion). **Referencia obligatoria para cualquier trabajo futuro en el modulo de pedidos/repartidores.**
 - **[docs/Delivery logistics.md](<docs/Delivery logistics.md>)** — Notas de analisis originales que dieron origen al documento anterior.
+- **[docs/modelo-de-datos.md](docs/modelo-de-datos.md)** — Esquema real de entidades y relaciones del backend (diagrama ER, campos, que falta modelar). Se actualiza cada vez que cambia el esquema.
