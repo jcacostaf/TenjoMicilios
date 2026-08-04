@@ -20,11 +20,13 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   final _geocoding = GeocodingService();
   final _labelController = TextEditingController();
   final _addressController = TextEditingController();
+  final _additionalInfoController = TextEditingController();
 
   ll.LatLng? _pickedLocation;
   bool _outsideArea = false;
   bool _saving = false;
   bool _loadingSuggestion = false;
+  HousingType _housingType = HousingType.casa;
 
   Future<void> _onMapTap(ll.LatLng point) async {
     setState(() {
@@ -56,6 +58,8 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       addressText: _addressController.text,
       latitude: _pickedLocation!.latitude,
       longitude: _pickedLocation!.longitude,
+      housingType: _housingType,
+      additionalInfo: _additionalInfoController.text.isEmpty ? null : _additionalInfoController.text,
     );
     await _storage.addAddress(address);
 
@@ -66,7 +70,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Nueva dirección')),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
           key: _formKey,
@@ -126,12 +130,12 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               const SizedBox(height: 8),
               if (_outsideArea)
                 const Text(
-                  'Esa ubicacion queda fuera del area de cobertura (max. 3 km del pueblo). Elige otro punto.',
+                  'Esa ubicación queda fuera del área de cobertura (max. 3 km del pueblo). Elige otro punto.',
                   style: TextStyle(color: Colors.red),
                 )
               else if (_pickedLocation != null)
                 const Text(
-                  'Ubicacion dentro del area de cobertura.',
+                  'Ubicación dentro del área de cobertura.',
                   style: TextStyle(color: Colors.green),
                 ),
               const SizedBox(height: 16),
@@ -158,6 +162,34 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       : null,
                 ),
                 validator: (value) => (value == null || value.isEmpty) ? 'Requerido' : null,
+              ),
+              const SizedBox(height: 16),
+              const Text('Tipo de vivienda'),
+              const SizedBox(height: 4),
+              SegmentedButton<HousingType>(
+                segments: const [
+                  ButtonSegment(
+                    value: HousingType.casa,
+                    label: Text('Casa'),
+                    icon: Icon(Icons.house_outlined),
+                  ),
+                  ButtonSegment(
+                    value: HousingType.apartamento,
+                    label: Text('Apartamento'),
+                    icon: Icon(Icons.apartment_outlined),
+                  ),
+                ],
+                selected: {_housingType},
+                onSelectionChanged: (selection) => setState(() => _housingType = selection.first),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _additionalInfoController,
+                decoration: const InputDecoration(
+                  labelText: 'Información complementaria (opcional)',
+                  helperText: 'Ej. Torre 3 apto 402, porton azul, cerca a la tienda X',
+                ),
+                maxLines: 2,
               ),
               const SizedBox(height: 24),
               ElevatedButton(

@@ -55,12 +55,19 @@ class _AddressListScreenState extends State<AddressListScreen> {
                   itemCount: _addresses.length,
                   itemBuilder: (context, index) {
                     final address = _addresses[index];
+                    final housingLabel = address.housingType == HousingType.casa
+                        ? 'Casa'
+                        : 'Apartamento';
                     return RadioListTile<String>(
                       value: address.id,
                       groupValue: _selectedId,
                       onChanged: (value) => _select(value!),
                       title: Text(address.label),
-                      subtitle: Text(address.addressText),
+                      subtitle: Text(
+                        '${address.addressText}\n$housingLabel'
+                        '${address.additionalInfo != null ? ' · ${address.additionalInfo}' : ''}',
+                      ),
+                      isThreeLine: true,
                       secondary: IconButton(
                         icon: const Icon(Icons.delete_outline),
                         onPressed: () => _delete(address.id),
