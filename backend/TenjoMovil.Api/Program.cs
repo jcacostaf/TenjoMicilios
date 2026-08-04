@@ -32,4 +32,20 @@ app.MapPost("/api/stores", async (AppDbContext db, Store store) =>
     return Results.Created($"/api/stores/{store.Id}", store);
 });
 
+app.MapPut("/api/stores/{id}", async (AppDbContext db, int id, Store updated) =>
+{
+    var store = await db.Stores.FindAsync(id);
+    if (store is null) return Results.NotFound();
+
+    store.Name = updated.Name;
+    store.Address = updated.Address;
+    store.Phone = updated.Phone;
+    store.Category = updated.Category;
+    store.Latitude = updated.Latitude;
+    store.Longitude = updated.Longitude;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(store);
+});
+
 app.Run();
