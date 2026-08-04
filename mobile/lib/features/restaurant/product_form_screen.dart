@@ -147,7 +147,26 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
               ),
               const SizedBox(height: 12),
               SwitchListTile(
-                title: const Text('Activo en el catalogo'),
+                title: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _isActive ? Colors.green.shade50 : Colors.grey.shade200,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: _isActive ? Colors.green : Colors.grey.shade400,
+                      ),
+                    ),
+                    child: Text(
+                      'Activo en el catálogo',
+                      style: TextStyle(
+                        color: _isActive ? Colors.green.shade800 : Colors.grey.shade700,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ),
                 value: _isActive,
                 onChanged: (value) => setState(() => _isActive = value),
               ),
