@@ -48,4 +48,26 @@ app.MapPut("/api/stores/{id}", async (AppDbContext db, int id, Store updated) =>
     return Results.Ok(store);
 });
 
+app.MapGet("/api/drivers", async (AppDbContext db) =>
+    await db.Drivers.ToListAsync());
+
+app.MapPost("/api/drivers/{id}/location", async (AppDbContext db, int id, DriverLocationUpdate update) =>
+{
+    var driver = await db.Drivers.FindAsync(id);
+    if (driver is null)
+    {
+        driver = new Driver { Id = id, Name = update.Name ?? $"Conductor {id}" };
+        db.Drivers.Add(driver);
+    }
+
+    driver.Latitude = update.Latitude;
+    driver.Longitude = update.Longitude;
+    driver.UpdatedAt = DateTime.UtcNow;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(driver);
+});
+
 app.Run();
+
+record DriverLocationUpdate(double Latitude, double Longitude, string? Name);
