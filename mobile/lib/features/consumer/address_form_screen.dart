@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart' as ll;
 import '../../core/models/consumer_address.dart';
 import '../../core/services/address_storage_service.dart';
+import '../../core/services/geocoding_service.dart';
 import '../../core/utils/geo.dart';
 
 class AddressFormScreen extends StatefulWidget {
@@ -15,17 +17,30 @@ class AddressFormScreen extends StatefulWidget {
 class _AddressFormScreenState extends State<AddressFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _storage = AddressStorageService();
+  final _geocoding = GeocodingService();
   final _labelController = TextEditingController();
   final _addressController = TextEditingController();
 
   ll.LatLng? _pickedLocation;
   bool _outsideArea = false;
   bool _saving = false;
+  bool _loadingSuggestion = false;
 
-  void _onMapTap(ll.LatLng point) {
+  Future<void> _onMapTap(ll.LatLng point) async {
     setState(() {
       _pickedLocation = point;
       _outsideArea = !isWithinDeliveryArea(point.latitude, point.longitude);
+    });
+
+    if (_outsideArea) return;
+
+    setState(() => _loadingSuggestion = true);
+    final suggestion = await _geocoding.suggestAddress(point.latitude, point.longitude);
+    if (!mounted || _pickedLocation != point) return;
+
+    setState(() {
+      _loadingSuggestion = false;
+      if (suggestion != null) _addressController.text = suggestion;
     });
   }
 
@@ -50,7 +65,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nueva direccion')),
+      appBar: AppBar(title: const Text('Nueva dirección')),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -59,7 +74,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const Text(
-                'Toca el mapa para elegir tu direccion (zona urbana y rural, hasta 3 km del pueblo).',
+                'Toca el mapa para elegir tu dirección (zona urbana y rural, hasta 3 km del pueblo).',
               ),
               const SizedBox(height: 8),
               SizedBox(
@@ -70,7 +85,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                     options: MapOptions(
                       initialCenter: const ll.LatLng(tenjoCenterLat, tenjoCenterLng),
                       initialZoom: 13,
-                      onTap: (_, point) => _onMapTap(point),
+                      onTap: (_, point) => unawaited(_onMapTap(point)),
                     ),
                     children: [
                       TileLayer(
@@ -128,13 +143,26 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
               const SizedBox(height: 12),
               TextFormField(
                 controller: _addressController,
-                decoration: const InputDecoration(labelText: 'Direccion'),
+                decoration: InputDecoration(
+                  labelText: 'Dirección',
+                  helperText: _loadingSuggestion ? 'Buscando dirección sugerida...' : 'Puedes editarla',
+                  suffixIcon: _loadingSuggestion
+                      ? const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                        )
+                      : null,
+                ),
                 validator: (value) => (value == null || value.isEmpty) ? 'Requerido' : null,
               ),
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: (_pickedLocation == null || _outsideArea || _saving) ? null : _save,
-                child: Text(_saving ? 'Guardando...' : 'Guardar direccion'),
+                child: Text(_saving ? 'Guardando...' : 'Guardar dirección'),
               ),
             ],
           ),
