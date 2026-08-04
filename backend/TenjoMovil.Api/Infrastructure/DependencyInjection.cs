@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TenjoMovil.Api.Abstractions;
 using TenjoMovil.Api.Abstractions.Drivers;
+using TenjoMovil.Api.Abstractions.Orders;
 using TenjoMovil.Api.Abstractions.Products;
 using TenjoMovil.Api.Abstractions.Stores;
 using TenjoMovil.Api.Infrastructure.Persistence;
@@ -29,6 +30,9 @@ public static class DependencyInjection
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductQueries, ProductQueries>();
         services.AddScoped<IProductImageStorage, ProductImageStorage>();
+
+        services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<IOrderQueries, OrderQueries>();
 
         return services;
     }

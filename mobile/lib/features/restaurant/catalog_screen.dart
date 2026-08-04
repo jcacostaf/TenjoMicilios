@@ -4,6 +4,7 @@ import '../../core/api_config.dart';
 import '../../core/models/store.dart';
 import '../../core/models/product.dart';
 import '../../core/services/api_service.dart';
+import 'orders_screen.dart';
 import 'product_form_screen.dart';
 
 final _currencyFormat = NumberFormat.currency(
@@ -55,7 +56,20 @@ class _CatalogScreenState extends State<CatalogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Catalogo - ${widget.store.name}')),
+      appBar: AppBar(
+        title: Text('Catalogo - ${widget.store.name}'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.receipt_long),
+            tooltip: 'Pedidos',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => OrdersScreen(store: widget.store)),
+              );
+            },
+          ),
+        ],
+      ),
       body: FutureBuilder<List<Product>>(
         future: _productsFuture,
         builder: (context, snapshot) {

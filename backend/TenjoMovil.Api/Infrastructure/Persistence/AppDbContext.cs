@@ -10,4 +10,6 @@ public class AppDbContext : DbContext
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<Driver> Drivers => Set<Driver>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<Order> Orders => Set<Order>();
+    public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 }

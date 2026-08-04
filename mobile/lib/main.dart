@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'features/restaurant/store_selector_screen.dart';
 import 'features/consumer/address_list_screen.dart';
+import 'features/driver/available_orders_screen.dart';
 
 void main() {
   runApp(const TenjoMiciliosApp());
@@ -68,6 +69,16 @@ class WelcomeScreen extends StatelessWidget {
                 onPressed: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => const StoreSelectorScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.two_wheeler),
+                label: const Text('Soy un repartidor'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AvailableOrdersScreen()),
                   );
                 },
               ),
