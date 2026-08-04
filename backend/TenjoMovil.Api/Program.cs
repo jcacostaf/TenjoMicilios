@@ -21,6 +21,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseStaticFiles();
 
 app.MapGet("/api/stores", async (AppDbContext db) =>
     await db.Stores.ToListAsync());
@@ -92,6 +93,37 @@ app.MapPut("/api/products/{id}", async (AppDbContext db, int id, Product updated
     await db.SaveChangesAsync();
     return Results.Ok(product);
 });
+
+const long maxPhotoBytes = 5 * 1024 * 1024; // 5 MB
+var allowedPhotoExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+
+app.MapPost("/api/products/{id}/photo", async (AppDbContext db, int id, IFormFile file) =>
+{
+    var product = await db.Products.FindAsync(id);
+    if (product is null) return Results.NotFound();
+
+    if (file.Length == 0) return Results.BadRequest("Archivo vacio.");
+    if (file.Length > maxPhotoBytes) return Results.BadRequest("La foto supera el limite de 5MB.");
+
+    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+    if (!allowedPhotoExtensions.Contains(extension))
+        return Results.BadRequest("Formato no soportado. Usa JPG, PNG o WEBP.");
+
+    var uploadsPath = Path.Combine(AppContext.BaseDirectory, "wwwroot", "uploads");
+    Directory.CreateDirectory(uploadsPath);
+
+    var fileName = $"product-{id}-{Guid.NewGuid()}{extension}";
+    var filePath = Path.Combine(uploadsPath, fileName);
+
+    using (var stream = File.Create(filePath))
+    {
+        await file.CopyToAsync(stream);
+    }
+
+    product.ImageUrl = $"/uploads/{fileName}";
+    await db.SaveChangesAsync();
+    return Results.Ok(product);
+}).DisableAntiforgery();
 
 app.Run();
 

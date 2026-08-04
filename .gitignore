@@ -6,3 +6,5 @@ obj/
 node_modules/
 .vs/
 appsettings.Development.json
+wwwroot/uploads/*
+!wwwroot/uploads/.gitkeep
