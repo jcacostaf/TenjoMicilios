@@ -7,8 +7,17 @@
 
 ## Backend (API)
 
+Uses PostgreSQL. Copy the example config and set your local password:
+
 ```
 cd backend/TenjoMovil.Api
+cp appsettings.Development.json.example appsettings.Development.json
+# edit appsettings.Development.json and set your real PostgreSQL password
+```
+
+Then create the database (if it doesn't exist yet) and run:
+
+```
 dotnet ef database update   # only needed the first time, or after new migrations
 dotnet run --urls http://localhost:5145
 ```

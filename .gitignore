@@ -5,3 +5,4 @@ obj/
 *.db-wal
 node_modules/
 .vs/
+appsettings.Development.json
