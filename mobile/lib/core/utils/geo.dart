@@ -5,7 +5,10 @@ const tenjoCenterLng = -74.1447;
 const maxDeliveryRadiusMeters = 3000;
 
 // Zoom por debajo del cual el mapa mostraria mas alla del radio de cobertura + 3 km de margen.
-const workingAreaMinZoom = 13.0;
+const workingAreaMinZoom = 14.0;
+
+// Zoom mas alla del cual las calles ya no se distinguen mejor, solo se acerca de mas.
+const workingAreaMaxZoom = 18.0;
 
 double distanceInMeters(double lat1, double lng1, double lat2, double lng2) {
   const earthRadiusMeters = 6371000.0;

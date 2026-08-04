@@ -186,6 +186,7 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
               initialCenter: center,
               initialZoom: 16,
               minZoom: workingAreaMinZoom,
+              maxZoom: workingAreaMaxZoom,
               onMapReady: () => _mapReady = true,
             ),
             children: [

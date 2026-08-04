@@ -90,6 +90,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       initialCenter: const ll.LatLng(tenjoCenterLat, tenjoCenterLng),
                       initialZoom: 13,
                       minZoom: workingAreaMinZoom,
+                      maxZoom: workingAreaMaxZoom,
                       onTap: (_, point) => unawaited(_onMapTap(point)),
                     ),
                     children: [
