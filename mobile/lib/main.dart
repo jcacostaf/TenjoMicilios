@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/restaurant/store_selector_screen.dart';
+import 'features/consumer/address_list_screen.dart';
 
 void main() {
   runApp(const TenjoMiciliosApp());
@@ -51,6 +52,16 @@ class WelcomeScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
+              ElevatedButton.icon(
+                icon: const Icon(Icons.person),
+                label: const Text('Soy un consumidor'),
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const AddressListScreen()),
+                  );
+                },
+              ),
+              const SizedBox(height: 12),
               ElevatedButton.icon(
                 icon: const Icon(Icons.storefront),
                 label: const Text('Soy un restaurante'),
