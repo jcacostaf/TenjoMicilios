@@ -68,6 +68,31 @@ app.MapPost("/api/drivers/{id}/location", async (AppDbContext db, int id, Driver
     return Results.Ok(driver);
 });
 
+app.MapGet("/api/stores/{storeId}/products", async (AppDbContext db, int storeId) =>
+    await db.Products.Where(p => p.StoreId == storeId).ToListAsync());
+
+app.MapPost("/api/stores/{storeId}/products", async (AppDbContext db, int storeId, Product product) =>
+{
+    product.StoreId = storeId;
+    db.Products.Add(product);
+    await db.SaveChangesAsync();
+    return Results.Created($"/api/products/{product.Id}", product);
+});
+
+app.MapPut("/api/products/{id}", async (AppDbContext db, int id, Product updated) =>
+{
+    var product = await db.Products.FindAsync(id);
+    if (product is null) return Results.NotFound();
+
+    product.Name = updated.Name;
+    product.Description = updated.Description;
+    product.Price = updated.Price;
+    product.IsActive = updated.IsActive;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(product);
+});
+
 app.Run();
 
 record DriverLocationUpdate(double Latitude, double Longitude, string? Name);
