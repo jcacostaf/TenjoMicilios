@@ -46,7 +46,7 @@ class ApiService {
     await request.send();
   }
 
-  Future<void> createOrder(
+  Future<int> createOrder(
     int storeId, {
     String? deliveryAddressText,
     String? recipientName,
@@ -66,6 +66,13 @@ class ApiService {
     if (res.statusCode >= 400) {
       throw Exception(_errorDetail(res.body) ?? 'No se pudo crear el pedido');
     }
+    return (jsonDecode(res.body) as Map<String, dynamic>)['id'] as int;
+  }
+
+  Future<OrderDetail?> getOrder(int orderId) async {
+    final res = await http.get(Uri.parse('$apiBaseUrl/api/orders/$orderId'));
+    if (res.statusCode == 404) return null;
+    return OrderDetail.fromJson(jsonDecode(res.body));
   }
 
   Future<List<StoreOrder>> getStoreOrders(int storeId) async {

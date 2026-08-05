@@ -22,6 +22,14 @@ public class OrdersController : ControllerBase
         return Ok(orders);
     }
 
+    [HttpGet("orders/{id:int}")]
+    public async Task<IActionResult> GetById(
+        int id, [FromServices] OrderDetailDomain domain, CancellationToken ct)
+    {
+        var order = await domain.GetByIdAsync(id, ct);
+        return order is null ? NotFound() : Ok(order);
+    }
+
     [HttpPost("stores/{storeId:int}/orders")]
     public async Task<IActionResult> Create(
         int storeId, [FromBody] CreateOrderRequest request, [FromServices] CreateOrderDomain domain, CancellationToken ct)

@@ -182,3 +182,55 @@ class ActiveOrder {
     );
   }
 }
+
+class OrderDetail {
+  final int id;
+  final int storeId;
+  final String storeName;
+  final OrderStatus status;
+  final String? deliveryAddressText;
+  final String? recipientName;
+  final String? note;
+  final double total;
+  final List<OrderItemLine> items;
+  final DateTime createdAt;
+  final DateTime? confirmedAt;
+  final DateTime? readyAt;
+  final DateTime? deliveredAt;
+
+  OrderDetail({
+    required this.id,
+    required this.storeId,
+    required this.storeName,
+    required this.status,
+    required this.deliveryAddressText,
+    required this.recipientName,
+    required this.note,
+    required this.total,
+    required this.items,
+    required this.createdAt,
+    required this.confirmedAt,
+    required this.readyAt,
+    required this.deliveredAt,
+  });
+
+  factory OrderDetail.fromJson(Map<String, dynamic> json) {
+    return OrderDetail(
+      id: json['id'] as int,
+      storeId: json['storeId'] as int,
+      storeName: json['storeName'] as String,
+      status: OrderStatus.values[json['status'] as int],
+      deliveryAddressText: json['deliveryAddressText'] as String?,
+      recipientName: json['recipientName'] as String?,
+      note: json['note'] as String?,
+      total: (json['total'] as num).toDouble(),
+      items: (json['items'] as List<dynamic>)
+          .map((j) => OrderItemLine.fromJson(j as Map<String, dynamic>))
+          .toList(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
+      confirmedAt: json['confirmedAt'] != null ? DateTime.parse(json['confirmedAt'] as String) : null,
+      readyAt: json['readyAt'] != null ? DateTime.parse(json['readyAt'] as String) : null,
+      deliveredAt: json['deliveredAt'] != null ? DateTime.parse(json['deliveredAt'] as String) : null,
+    );
+  }
+}

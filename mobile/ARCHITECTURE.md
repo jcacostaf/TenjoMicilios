@@ -10,14 +10,16 @@ lib/
   core/                  Codigo compartido entre features.
     api_config.dart       URL base del backend.
     models/                Clases planas que reflejan las entidades del backend
-                            (Store, Product, Order, ConsumerAddress, DriverProfile),
-                            con fromJson/toJson.
+                            (Store, Product, Order/OrderDetail, ConsumerAddress,
+                            DriverProfile, CartItem), con fromJson/toJson.
     services/
       api_service.dart      Todas las llamadas HTTP al backend, centralizadas aqui.
       geocoding_service.dart  Direccion de texto <-> coordenadas, via Nominatim (OSM).
       routing_service.dart    Ruta real por calles entre dos puntos, via OSRM.
       driver_identity_service.dart  Guarda localmente quien es el repartidor logueado.
       address_storage_service.dart  Guarda localmente las direcciones del consumidor.
+      order_tracking_service.dart   Guarda localmente el pedido activo del consumidor
+                                     (no hay cuenta/identidad de consumidor todavia).
     utils/
       geo.dart               Distancia entre coordenadas, limites de zoom del mapa,
                               y conversion lat/lng -> tile OSM (para precargar tiles).
@@ -30,6 +32,11 @@ lib/
                                     foto, activo).
       orders_screen.dart           Pedidos entrantes y su estado.
     consumer/               Flujo del consumidor.
+      business_list_screen.dart    Punto de entrada: negocios por categoria
+                                    (chips), banner del pedido activo si hay uno.
+      store_menu_screen.dart       Productos de un negocio, carrito en memoria.
+      checkout_screen.dart         Direccion de entrega + confirmar pedido.
+      order_tracking_screen.dart   Estado del pedido en vivo (sondeo cada 8s).
       address_list_screen.dart     Direcciones guardadas del consumidor.
       address_form_screen.dart     Elegir/confirmar una direccion en el mapa.
     driver/                 Flujo del repartidor.
@@ -43,6 +50,12 @@ lib/
 - **Modelos livianos**: `core/models/` son solo datos (sin logica), con `fromJson`/`toJson` para hablar con el backend.
 - **Sin manejo de estado global todavia**: cada pantalla mantiene su propio estado con `StatefulWidget` (`FutureBuilder` para cargas async). Si la complejidad crece, evaluar Riverpod (como se penso originalmente en `projectdescription.md`).
 - **Separacion por rol**: nunca mezclar widgets/pantallas de distintos roles en la misma carpeta de `features/`.
+
+## Pedidos del consumidor
+
+Sin pago y sin cuenta/login de consumidor todavia. El flujo es: `business_list_screen` (categoria via chips, filtrado en el cliente ya que `GET /api/stores` no filtra por categoria) -> `store_menu_screen` (carrito en memoria, `Map<productId, cantidad>`) -> `checkout_screen` (usa la direccion ya seleccionada en `AddressStorageService`, llama `ApiService.createOrder`) -> `order_tracking_screen` (sondea `GET /api/orders/{id}` cada 8s, mismo patron que `driver_navigation_screen`).
+
+Como no hay identidad de consumidor en el backend, no hay forma de listar "mis pedidos" desde el servidor. En su lugar, `order_tracking_service.dart` guarda localmente el id del ultimo pedido activo (se limpia solo cuando llega a `Entregado`), y `business_list_screen` lo usa para mostrar un banner de "pedido activo" al volver a abrir la app. Es de un solo pedido a la vez, sin historial — si se necesita historial real, hace falta una identidad de consumidor en el backend primero.
 
 ## Geolocalizacion y mapas
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'features/restaurant/store_selector_screen.dart';
-import 'features/consumer/address_list_screen.dart';
+import 'features/consumer/business_list_screen.dart';
 import 'features/driver/available_orders_screen.dart';
 
 void main() {
@@ -58,7 +58,7 @@ class WelcomeScreen extends StatelessWidget {
                 label: const Text('Soy un consumidor'),
                 onPressed: () {
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const AddressListScreen()),
+                    MaterialPageRoute(builder: (_) => const BusinessListScreen()),
                   );
                 },
               ),

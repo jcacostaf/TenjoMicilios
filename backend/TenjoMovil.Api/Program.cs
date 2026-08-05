@@ -30,6 +30,7 @@ builder.Services.AddScoped<UploadProductPhotoDomain>();
 
 builder.Services.AddScoped<CreateOrderDomain>();
 builder.Services.AddScoped<StoreOrdersListDomain>();
+builder.Services.AddScoped<OrderDetailDomain>();
 builder.Services.AddScoped<ConfirmOrderDomain>();
 builder.Services.AddScoped<MarkOrderReadyDomain>();
 builder.Services.AddScoped<AvailableOrdersForDriverDomain>();

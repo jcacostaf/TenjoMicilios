@@ -18,4 +18,7 @@ public class OrderQueries(AppDbContext db) : IOrderQueries
             .Where(o => o.StoreId == storeId)
             .OrderByDescending(o => o.CreatedAt)
             .ToListAsync(ct);
+
+    public Task<Order?> GetByIdAsync(int id, CancellationToken ct) =>
+        db.Orders.Include(o => o.Items).FirstOrDefaultAsync(o => o.Id == id, ct);
 }
