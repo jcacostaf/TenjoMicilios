@@ -40,6 +40,8 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   double? _routeDurationSeconds;
   bool _fetchingRoute = false;
   DateTime? _lastRouteFetch;
+  bool _hasFitBounds = false;
+  bool _hasFitRoute = false;
 
   @override
   void initState() {
@@ -63,6 +65,8 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
     _routePoints = [];
     _routeDistanceMeters = null;
     _routeDurationSeconds = null;
+    _hasFitBounds = false;
+    _hasFitRoute = false;
 
     if (_order.status == OrderStatus.enCamino) {
       final address = _order.deliveryAddressText;
@@ -83,6 +87,33 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
       setState(() => _destination = (lat != null && lng != null) ? ll.LatLng(lat, lng) : null);
     }
     unawaited(_maybeFetchRoute(force: true));
+    _maybeFitBounds();
+  }
+
+  void _maybeFitBounds() {
+    if (_hasFitBounds || !_mapReady) return;
+    final origin = _currentPosition;
+    final dest = _destination;
+    if (origin == null || dest == null) return;
+
+    _hasFitBounds = true;
+    _fitToCoordinates([origin, dest]);
+  }
+
+  void _maybeFitRoute() {
+    if (_hasFitRoute || !_mapReady || _routePoints.isEmpty) return;
+    _hasFitRoute = true;
+    _fitToCoordinates(_routePoints);
+  }
+
+  void _fitToCoordinates(List<ll.LatLng> points) {
+    _mapController.fitCamera(
+      CameraFit.coordinates(
+        coordinates: points,
+        padding: const EdgeInsets.fromLTRB(40, 40, 40, 180),
+        maxZoom: workingAreaMaxZoom,
+      ),
+    );
   }
 
   Future<void> _maybeFetchRoute({bool force = false}) async {
@@ -105,6 +136,7 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
       _routeDistanceMeters = result.distanceMeters;
       _routeDurationSeconds = result.durationSeconds;
     });
+    _maybeFitRoute();
   }
 
   void _startTracking() {
@@ -117,7 +149,11 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
       unawaited(_api.updateDriverLocation(widget.driverId, position.latitude, position.longitude));
       unawaited(_maybeFetchRoute());
       if (_mapReady) {
-        _mapController.move(point, _mapController.camera.zoom);
+        if (_hasFitBounds) {
+          _mapController.move(point, _mapController.camera.zoom);
+        } else {
+          _maybeFitBounds();
+        }
       }
     });
   }
@@ -187,7 +223,10 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
               initialZoom: 16,
               minZoom: workingAreaMinZoom,
               maxZoom: workingAreaMaxZoom,
-              onMapReady: () => _mapReady = true,
+              onMapReady: () {
+                _mapReady = true;
+                _maybeFitBounds();
+              },
             ),
             children: [
               TileLayer(
