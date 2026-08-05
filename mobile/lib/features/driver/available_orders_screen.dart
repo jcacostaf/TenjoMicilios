@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../core/models/order.dart';
 import '../../core/services/api_service.dart';
 import '../../core/services/driver_identity_service.dart';
+import '../../core/utils/geo.dart';
 import 'driver_navigation_screen.dart';
 
 final _currencyFormat = NumberFormat.currency(
@@ -40,6 +41,9 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
 
   final Set<int> _seenOrderIds = {};
   Timer? _pollTimer;
+
+  double? _lastPrecachedLat;
+  double? _lastPrecachedLng;
 
   int get _unseenCount =>
       _availableOrders.where((o) => !_seenOrderIds.contains(o.orderId)).length;
@@ -108,6 +112,7 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
     try {
       final position = await _getCurrentPosition();
       await _api.updateDriverLocation(driverId, position.latitude, position.longitude);
+      _precacheNearbyTiles(position.latitude, position.longitude);
     } catch (e) {
       setState(() => _locationError = 'No se pudo obtener tu ubicacion: $e');
     } finally {
@@ -132,6 +137,28 @@ class _AvailableOrdersScreenState extends State<AvailableOrdersScreen> {
       setState(() => _ordersError = 'Error cargando pedidos: $e');
     } finally {
       setState(() => _loadingOrders = false);
+    }
+  }
+
+  void _precacheNearbyTiles(double lat, double lng) {
+    if (!mounted) return;
+    final lastLat = _lastPrecachedLat;
+    final lastLng = _lastPrecachedLng;
+    if (lastLat != null && lastLng != null && distanceInMeters(lastLat, lastLng, lat, lng) < 200) {
+      return;
+    }
+    _lastPrecachedLat = lat;
+    _lastPrecachedLng = lng;
+
+    const zoomsToWarm = [16, 17];
+    for (final zoom in zoomsToWarm) {
+      final center = latLngToTile(lat, lng, zoom);
+      for (var dx = -1; dx <= 1; dx++) {
+        for (var dy = -1; dy <= 1; dy++) {
+          final url = osmTileUrl(x: center.x + dx, y: center.y + dy, zoom: zoom);
+          unawaited(precacheImage(NetworkImage(url), context).catchError((_) {}));
+        }
+      }
     }
   }
 

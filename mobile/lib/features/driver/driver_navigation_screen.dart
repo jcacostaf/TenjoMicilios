@@ -42,6 +42,10 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
   DateTime? _lastRouteFetch;
   bool _hasFitBounds = false;
   bool _hasFitRoute = false;
+  ll.LatLng? _lastRecenteredPosition;
+
+  static const _recenterThresholdMeters = 15.0;
+  static const _maxAcceptableAccuracyMeters = 50.0;
 
   @override
   void initState() {
@@ -67,6 +71,7 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
     _routeDurationSeconds = null;
     _hasFitBounds = false;
     _hasFitRoute = false;
+    _lastRecenteredPosition = null;
 
     if (_order.status == OrderStatus.enCamino) {
       final address = _order.deliveryAddressText;
@@ -97,12 +102,14 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
     if (origin == null || dest == null) return;
 
     _hasFitBounds = true;
+    _lastRecenteredPosition = origin;
     _fitToCoordinates([origin, dest]);
   }
 
   void _maybeFitRoute() {
     if (_hasFitRoute || !_mapReady || _routePoints.isEmpty) return;
     _hasFitRoute = true;
+    if (_currentPosition != null) _lastRecenteredPosition = _currentPosition;
     _fitToCoordinates(_routePoints);
   }
 
@@ -150,7 +157,16 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
       unawaited(_maybeFetchRoute());
       if (_mapReady) {
         if (_hasFitBounds) {
-          _mapController.move(point, _mapController.camera.zoom);
+          final last = _lastRecenteredPosition;
+          final accurateEnough = position.accuracy <= _maxAcceptableAccuracyMeters;
+          final moved = accurateEnough &&
+              (last == null ||
+                  distanceInMeters(last.latitude, last.longitude, point.latitude, point.longitude) >
+                      _recenterThresholdMeters);
+          if (moved) {
+            _lastRecenteredPosition = point;
+            _mapController.move(point, _mapController.camera.zoom);
+          }
         } else {
           _maybeFitBounds();
         }
@@ -229,10 +245,7 @@ class _DriverNavigationScreenState extends State<DriverNavigationScreen> {
               },
             ),
             children: [
-              TileLayer(
-                urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                subdomains: const ['a', 'b', 'c'],
-              ),
+              TileLayer(urlTemplate: osmTileUrlTemplate),
               if (_routePoints.isNotEmpty)
                 PolylineLayer(
                   polylines: [

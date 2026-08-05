@@ -94,10 +94,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                       onTap: (_, point) => unawaited(_onMapTap(point)),
                     ),
                     children: [
-                      TileLayer(
-                        urlTemplate: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                        subdomains: const ['a', 'b', 'c'],
-                      ),
+                      TileLayer(urlTemplate: osmTileUrlTemplate),
                       CircleLayer(
                         circles: [
                           CircleMarker(
